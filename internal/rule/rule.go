@@ -2,38 +2,34 @@ package rule
 
 import "strings"
 
-type RuleSet interface {
-	GetRules() []*Rule
-}
-
 type Rule interface {
 	GetPath() string
 	GetPathSegments() []string
 	Matches(value Value) bool
 }
 
-type SimpleRule struct {
+type StandardRule struct {
 	path         string
 	pathSegments []string
 	matches      func(value Value) bool
 }
 
-func NewSimpleRule(pathSegments []string, matches func(value Value) bool) Rule {
-	return &SimpleRule{
+func NewRule(pathSegments []string, matches func(value Value) bool) Rule {
+	return &StandardRule{
 		path:         strings.Join(pathSegments, "."),
 		pathSegments: pathSegments,
 		matches:      matches,
 	}
 }
 
-func (r *SimpleRule) GetPath() string {
+func (r *StandardRule) GetPath() string {
 	return r.path
 }
 
-func (r *SimpleRule) GetPathSegments() []string {
+func (r *StandardRule) GetPathSegments() []string {
 	return r.pathSegments
 }
 
-func (r *SimpleRule) Matches(value Value) bool {
+func (r *StandardRule) Matches(value Value) bool {
 	return r.matches(value)
 }
