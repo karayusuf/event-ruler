@@ -1,4 +1,4 @@
-package scanner
+package jsonutil
 
 import (
 	"encoding/json"
@@ -20,7 +20,8 @@ func TestFoo(t *testing.T) {
 			"time": "2017-10-02T16:24:49Z",
 			"region": "us-east-1",
 			"resources": [
-				"arn:aws:ec2:us-east-1:123456789012:instance/i-000000aaaaaa00000"
+				"arn:aws:ec2:us-east-1:123456789012:instance/i-000000aaaaaa00000",
+				"arn:aws:ec2:us-east-1:123456789012:instance/i-000000aaaaaa00001"
 			],
 			"detail": {
 				"c-count": 5,
@@ -35,8 +36,8 @@ func TestFoo(t *testing.T) {
 
 	s := &Scanner{}
 
-	err := s.Scan(exampleJson, func(pathSegments []string, t json.Token) bool {
-		fmt.Printf("path:'%s' value: %v\n", strings.Join(pathSegments, "."), t)
+	err := s.Scan(exampleJson, func(tokenPath *tokenPath, t json.Token) bool {
+		fmt.Printf("path:'%s' value: %v\n", tokenPath.String(), t)
 
 		return true
 	})

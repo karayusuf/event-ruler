@@ -1,4 +1,4 @@
-package scanner
+package jsonutil
 
 import (
 	"encoding/json"
@@ -16,7 +16,7 @@ type Scanner struct {
 //   - Array indices: "0", "1", ...
 //
 // Example path: foo.bar[2].baz → []string{"foo", "bar", "2", "baz"}
-type CallbackOnLeaf func(pathSegments []string, token json.Token) bool
+type CallbackOnLeaf func(tokenPath *tokenPath, token json.Token) bool
 
 var (
 	// internal sentinel used for early termination when callback returns false
@@ -32,7 +32,7 @@ func (s *Scanner) Scan(reader io.Reader, onLeaf CallbackOnLeaf) error {
 	decoder.UseNumber()
 
 	cursor := &cursor{
-		segments:       []string{},
+		currentPath:    &tokenPath{},
 		decoder:        decoder,
 		callbackOnLeaf: onLeaf,
 	}
@@ -53,19 +53,9 @@ func (s *Scanner) Scan(reader io.Reader, onLeaf CallbackOnLeaf) error {
 }
 
 type cursor struct {
-	segments       []string
+	currentPath    *tokenPath
 	decoder        *json.Decoder
 	callbackOnLeaf CallbackOnLeaf
-}
-
-func (c *cursor) push(seg string) {
-	c.segments = append(c.segments, seg)
-}
-
-func (c *cursor) pop() {
-	if len(c.segments) > 0 {
-		c.segments = c.segments[:len(c.segments)-1]
-	}
 }
 
 func (c *cursor) scanRoot() error {
@@ -101,7 +91,7 @@ func (c *cursor) scanValueWithToken(tok json.Token) error {
 	default:
 		// Scalar leaf
 		if c.callbackOnLeaf != nil {
-			if !c.callbackOnLeaf(append([]string(nil), c.segments...), tok) {
+			if !c.callbackOnLeaf(c.currentPath, tok) {
 				return errStop
 			}
 		}
@@ -123,14 +113,14 @@ func (c *cursor) scanObject() error {
 			return fmt.Errorf("invalid token %T (%v): object key must be a string", tok, tok)
 		}
 
-		c.push(key)
+		c.currentPath.pushKey(key)
 		if err := c.scanValue(); err != nil {
 			if errors.Is(err, errStop) {
 				return err
 			}
 			return err
 		}
-		c.pop()
+		c.currentPath.pop()
 	}
 
 	// Consume closing '}'
@@ -149,16 +139,17 @@ func (c *cursor) scanObject() error {
 func (c *cursor) scanArray() error {
 	// [] or [v1, v2, ...]
 	index := 0
+
 	for c.decoder.More() {
-		c.push(fmt.Sprintf("%d", index))
+		c.currentPath.pushIndex(index)
 		if err := c.scanValue(); err != nil {
 			if errors.Is(err, errStop) {
 				return err
 			}
 			return err
 		}
-		c.pop()
 		index++
+		c.currentPath.pop()
 	}
 
 	// Consume closing ']'
