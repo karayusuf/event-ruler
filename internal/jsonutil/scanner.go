@@ -7,9 +7,6 @@ import (
 	"io"
 )
 
-type Scanner struct {
-}
-
 // CallbackOnLeaf is called for every scalar leaf value.
 // pathSegments is a slice representing the path to the leaf.
 //   - Object keys: "foo", "bar"
@@ -27,7 +24,7 @@ var (
 // It returns a slice of all leaf tokens encountered (in visit order).
 //
 // If onLeaf returns false at any point, scanning stops early.
-func (s *Scanner) Scan(reader io.Reader, onLeaf CallbackOnLeaf) error {
+func Scan(reader io.Reader, onLeaf CallbackOnLeaf) error {
 	decoder := json.NewDecoder(reader)
 	decoder.UseNumber()
 
