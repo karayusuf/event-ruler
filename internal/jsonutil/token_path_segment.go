@@ -7,7 +7,7 @@ const (
 	segmentIndex
 )
 
-type tokenPathSegment struct {
+type TokenPathSegment struct {
 	kind  segmentKind
 	key   string
 	index int

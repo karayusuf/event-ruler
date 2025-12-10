@@ -36,7 +36,7 @@ func TestFoo(t *testing.T) {
 
 	tokenValues := make(map[string]json.Token)
 
-	err := Scan(exampleJson, func(tokenPath *tokenPath, t json.Token) bool {
+	err := Scan(exampleJson, func(tokenPath *TokenPath, t json.Token) bool {
 		tokenValues[tokenPath.String()] = t
 		return true
 	})

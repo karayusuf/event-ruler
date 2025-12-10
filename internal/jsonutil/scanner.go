@@ -13,7 +13,7 @@ import (
 //   - Array indices: "0", "1", ...
 //
 // Example path: foo.bar[2].baz → []string{"foo", "bar", "2", "baz"}
-type CallbackOnLeaf func(tokenPath *tokenPath, token json.Token) bool
+type CallbackOnLeaf func(tokenPath *TokenPath, token json.Token) bool
 
 var (
 	// internal sentinel used for early termination when callback returns false
@@ -29,7 +29,7 @@ func Scan(reader io.Reader, onLeaf CallbackOnLeaf) error {
 	decoder.UseNumber()
 
 	cursor := &cursor{
-		currentPath:    &tokenPath{},
+		currentPath:    &TokenPath{},
 		decoder:        decoder,
 		callbackOnLeaf: onLeaf,
 	}
@@ -50,7 +50,7 @@ func Scan(reader io.Reader, onLeaf CallbackOnLeaf) error {
 }
 
 type cursor struct {
-	currentPath    *tokenPath
+	currentPath    *TokenPath
 	decoder        *json.Decoder
 	callbackOnLeaf CallbackOnLeaf
 }
@@ -88,7 +88,7 @@ func (c *cursor) scanValueWithToken(tok json.Token) error {
 	default:
 		// Scalar leaf
 		if c.callbackOnLeaf != nil {
-			if !c.callbackOnLeaf(c.currentPath, tok) {
+			if !c.callbackOnLeaf(c.currentPath.Clone(), tok) {
 				return errStop
 			}
 		}
